@@ -9,6 +9,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <memory>
 
 //using namespace std;
 static int cur_run_state = 0;       //当前运行状态， c 和 lua 都可能改变这个状态，要保持同步
@@ -36,7 +37,7 @@ int lua_debugger_ver = 0;             // luapanda.lua的版本，便于做向下
 struct path_transfer_node;
 struct breakpoint;
 // 路径缓存队列 getinfo -> format
-std::list<path_transfer_node*> getinfo_to_format_cache;
+std::list<std::unique_ptr<path_transfer_node>> getinfo_to_format_cache;
 // 存放断点map，key为source
 std::map<std::string, std::map<int, breakpoint> > all_breakpoint_map;
 
@@ -386,8 +387,7 @@ const char* getPath(lua_State *L,const char* source){
     }
     const char* retSource = lua_tostring(L, -1);
     //加入缓存,返回
-    path_transfer_node *nd = new path_transfer_node(source, retSource );
-    getinfo_to_format_cache.push_back(nd);
+    getinfo_to_format_cache.push_back(std::make_unique<path_transfer_node>(source, retSource));
 
     return retSource;
 }
